@@ -19,6 +19,11 @@ export interface NpmPackage {
     activationEvents: string[]
     main: string
     contributes: {
+        debuggers?: {
+            type: string
+            label: string
+            languages: string[]
+        }[]
         configuration: {
             type: string
             title: string

@@ -21,6 +21,7 @@ import { DefaultResourceFetcher } from './shared/defaultResourceFetcher'
 import { EnvironmentVariables } from './shared/environmentVariables'
 import { ext } from './shared/extensionGlobals'
 import { safeGet } from './shared/extensionUtilities'
+import { NpmPackage } from './shared/npmPackage'
 import { DefaultRegionProvider } from './shared/regions/defaultRegionProvider'
 import { DefaultSettingsConfiguration } from './shared/settingsConfiguration'
 import { AWSStatusBar } from './shared/statusBar'
@@ -48,6 +49,10 @@ export async function activate(context: vscode.ExtensionContext) {
     ext.sdkClientBuilder = new AWSClientBuilder(awsContext)
     ext.statusBar = new AWSStatusBar(awsContext, context)
 
+    vscode.commands.registerCommand(
+        'aws.mockups.validateDebugger',
+        async () => await validateDebuggerIsInstalled('ruby')
+    )
     vscode.commands.registerCommand('aws.login', async () => await ext.awsContextCommands.onCommandLogin())
     vscode.commands.registerCommand(
         'aws.credential.profile.create',
@@ -79,6 +84,40 @@ export async function activate(context: vscode.ExtensionContext) {
     ))
 
     await ext.statusBar.updateContext(undefined)
+}
+
+async function validateDebuggerIsInstalled(language: string): Promise<void> {
+    if (!canDebug(language)) {
+        // Do not await. The Thenable only resolves when the notification is closed.
+        vscode.window.showWarningMessage(
+            `No debugger is available for '${language}'. ` +
+            `Please install an extension that provides a debugger for '${language}'`
+        )
+        await promptToInstallDebugger(language)
+    }
+}
+
+async function promptToInstallDebugger(language: string): Promise<void> {
+    // Do not await. The Thenable returned by executeCommand for quickOpen will not
+    // resolve until the user presses Enter to accept the selected item.
+    vscode.commands.executeCommand(
+        'workbench.action.quickOpen',
+        'ext install @ruby:<language> @category:debuggers @sort:installs'
+    )
+    // Even though there is only one option, acceptSelectedQuickOpenItem isn't smart
+    // enough to select it by default.
+    await vscode.commands.executeCommand('workbench.action.quickOpenSelectNext')
+    await vscode.commands.executeCommand('workbench.action.acceptSelectedQuickOpenItem')
+}
+
+function canDebug(language: string): boolean {
+    return vscode.extensions.all
+        .map(e => (e.packageJSON as NpmPackage).contributes.debuggers)
+        .some(debuggers => !!debuggers && debuggers
+            .some(d => !!d.languages && !!d.languages
+                .some(l => l === language)
+            )
+        )
 }
 
 export function deactivate() {
