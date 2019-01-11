@@ -14,6 +14,8 @@ import { CloudFormationClient } from '../../shared/clients/cloudFormationClient'
 import { LambdaClient } from '../../shared/clients/lambdaClient'
 import { ext } from '../../shared/extensionGlobals'
 import { AWSTreeErrorHandlerNode } from '../../shared/treeview/awsTreeErrorHandlerNode'
+import { AWSTreeNodeBase } from '../../shared/treeview/awsTreeNodeBase'
+import { PlaceholderNode } from '../../shared/treeview/placeholderNode'
 import {
     intersection,
     toArrayAsync,
@@ -24,7 +26,6 @@ import {
 import { listCloudFormationStacks, listLambdaFunctions } from '../utils'
 import { ErrorNode } from './errorNode'
 import { FunctionNodeBase } from './functionNode'
-import { PlaceholderNode } from './placeholderNode'
 import { RegionNode } from './regionNode'
 
 export interface CloudFormationNode extends AWSTreeErrorHandlerNode {

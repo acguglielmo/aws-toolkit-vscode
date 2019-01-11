@@ -20,6 +20,7 @@ import { CloudFormationClient } from '../../../shared/clients/cloudFormationClie
 import { LambdaClient } from '../../../shared/clients/lambdaClient'
 import { ext } from '../../../shared/extensionGlobals'
 import { RegionInfo } from '../../../shared/regions/regionInfo'
+import { PlaceholderNode } from '../../../shared/treeview/placeholderNode'
 import { FakeExtensionContext } from '../../fakeExtensionContext'
 
 describe('DefaultCloudFormationStackNode', () => {

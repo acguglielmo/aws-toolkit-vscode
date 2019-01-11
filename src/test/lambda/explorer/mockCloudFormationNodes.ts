@@ -11,10 +11,10 @@ import {
     CloudFormationNode,
     CloudFormationStackNode
 } from '../../../lambda/explorer/cloudFormationNodes'
-import { PlaceholderNode } from '../../../lambda/explorer/placeholderNode'
 import { RegionNode } from '../../../lambda/explorer/regionNode'
 import { AWSTreeErrorHandlerNode } from '../../../shared/treeview/awsTreeErrorHandlerNode'
 import { AWSTreeNodeBase } from '../../../shared/treeview/awsTreeNodeBase'
+import { PlaceholderNode } from '../../../shared/treeview/placeholderNode'
 
 export class MockCloudFormationNode extends AWSTreeErrorHandlerNode implements CloudFormationNode {
     public constructor(

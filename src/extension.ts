@@ -11,6 +11,7 @@ import * as nls from 'vscode-nls'
 import { RegionNode } from './lambda/explorer/regionNode'
 import { LambdaTreeDataProvider } from './lambda/lambdaTreeDataProvider'
 import { NodeDebugConfigurationProvider } from './lambda/local/debugConfigurationProvider'
+import { SampleEventsTreeDataProvider } from './lambda/sampleEventsTreeDataProvider'
 import { DefaultAWSClientBuilder } from './shared/awsClientBuilder'
 import { AwsContextTreeCollection } from './shared/awsContextTreeCollection'
 import { DefaultToolkitClientBuilder } from './shared/clients/defaultToolkitClientBuilder'
@@ -70,7 +71,8 @@ export async function activate(context: vscode.ExtensionContext) {
     )
 
     const providers = [
-        new LambdaTreeDataProvider(awsContext, awsContextTrees, regionProvider, resourceFetcher)
+        new LambdaTreeDataProvider(awsContext, awsContextTrees, regionProvider, resourceFetcher),
+        new SampleEventsTreeDataProvider(awsContextTrees)
     ]
 
     providers.forEach((p) => {

@@ -86,6 +86,10 @@
                 {
                     "id": "lambda",
                     "name": "%AWS.lambda.explorerTitle%"
+                },
+                {
+                    "id": "sampleEvents",
+                    "name": "%AWS.sampleEvents.explorerTitle%"
                 }
             ]
         },

@@ -5,7 +5,7 @@
 
 'use strict'
 
-import { AWSTreeNodeBase } from '../../shared/treeview/awsTreeNodeBase'
+import { AWSTreeNodeBase } from './awsTreeNodeBase'
 
 // Can be used to add a child node in an explorer when a region has no resources
 // relevant to the explorer type.
