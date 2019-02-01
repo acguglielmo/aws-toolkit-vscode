@@ -22,9 +22,7 @@
         "onCommand:aws.showRegion",
         "onCommand:aws.hideRegion",
         "onView:lambda",
-        "onCommand:aws.newLambda",
         "onCommand:aws.invokeLambda",
-        "onCommand:aws.deployLambda",
         "onCommand:aws.getLambdaConfig",
         "onCommand:aws.getLambdaPolicy",
         "onCommand:aws.samcli.detect",
@@ -63,15 +61,14 @@
                     "type": "string",
                     "default": "",
                     "markdownDescription": "%AWS.configuration.description.samcli.location%"
+                },
+                "aws.samcli.debug.attach.timeout.millis": {
+                    "type": "number",
+                    "default": 30000,
+                    "markdownDescription": "%AWS.configuration.description.samcli.debug.attach.timeout%"
                 }
             }
         },
-        "debuggers": [
-            {
-                "type": "lambda-node",
-                "label": "%AWS.lambda.debug.node.label%"
-            }
-        ],
         "viewsContainers": {
             "activitybar": [
                 {
@@ -96,21 +93,6 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "aws.newLambda",
-                    "when": "view == lambda",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "aws.deployLambda",
-                    "when": "view == lambda",
-                    "group": "navigation@3"
-                },
-                {
-                    "command": "aws.invokeLambda",
-                    "when": "view == lambda",
-                    "group": "navigation@4"
-                },
-                {
                     "command": "aws.refreshAwsExplorer",
                     "when": "view == lambda",
                     "group": "navigation@5"
@@ -123,24 +105,19 @@
                     "group": "0@1"
                 },
                 {
-                    "command": "aws.deployLambda",
-                    "when": "view == lambda && viewItem =~ /^(awsRegionFunctionNode|awsCloudFormationFunctionNode)$/",
-                    "group": "0@2"
-                },
-                {
                     "command": "aws.getLambdaConfig",
                     "when": "view == lambda && viewItem =~ /^(awsRegionFunctionNode|awsCloudFormationFunctionNode)$/",
-                    "group": "0@3"
+                    "group": "1@1"
                 },
                 {
                     "command": "aws.getLambdaPolicy",
                     "when": "view == lambda && viewItem =~ /^(awsRegionFunctionNode|awsCloudFormationFunctionNode)$/",
-                    "group": "0@4"
+                    "group": "1@2"
                 },
                 {
                     "command": "aws.deleteLambda",
                     "when": "view == lambda && viewItem == awsRegionFunctionNode",
-                    "group": "0@5"
+                    "group": "2@1"
                 },
                 {
                     "command": "aws.deleteCloudFormation",
@@ -186,31 +163,9 @@
                 "category": "AWS"
             },
             {
-                "command": "aws.newLambda",
-                "title": "%AWS.command.newLambda%",
-                "category": "AWS",
-                "icon": {
-                    "light": "resources/light/new_lambda.svg",
-                    "dark": "resources/dark/new_lambda.svg"
-                }
-            },
-            {
-                "command": "aws.deployLambda",
-                "title": "%AWS.command.deployLambda%",
-                "category": "AWS",
-                "icon": {
-                    "light": "resources/light/deploy_lambda.svg",
-                    "dark": "resources/dark/deploy_lambda.svg"
-                }
-            },
-            {
                 "command": "aws.invokeLambda",
                 "title": "%AWS.command.invokeLambda%",
-                "category": "AWS",
-                "icon": {
-                    "light": "resources/light/invoke_lambda.svg",
-                    "dark": "resources/dark/invoke_lambda.svg"
-                }
+                "category": "AWS"
             },
             {
                 "command": "aws.deleteLambda",
@@ -220,11 +175,7 @@
             {
                 "command": "aws.refreshAwsExplorer",
                 "title": "%AWS.command.refreshAwsExplorer%",
-                "category": "AWS",
-                "icon": {
-                    "light": "resources/light/invoke_lambda.svg",
-                    "dark": "resources/dark/invoke_lambda.svg"
-                }
+                "category": "AWS"
             },
             {
                 "command": "aws.getLambdaConfig",
@@ -273,13 +224,17 @@
         "@types/del": "^3.0.1",
         "@types/fs-extra": "^5.0.4",
         "@types/glob": "^7.1.1",
+        "@types/handlebars": "^4.0.39",
+        "@types/js-yaml": "^3.11.2",
         "@types/lodash": "^4.14.110",
         "@types/mocha": "^2.2.48",
         "@types/node": "^10.12.12",
+        "@types/opn": "^5.1.0",
         "@types/request": "^2.47.1",
+        "@types/semver": "^5.5.0",
+        "@types/tcp-port-used": "^1.0.0",
         "@types/xml2js": "^0.4.3",
         "decache": "^4.4.0",
-        "del": "^3.0.0",
         "glob": "^7.1.3",
         "istanbul": "^0.4.5",
         "mocha": "^5.2.0",
@@ -293,21 +248,21 @@
         "vscode-nls-dev": "^3.2.2"
     },
     "dependencies": {
-        "@types/handlebars": "^4.0.39",
-        "@types/js-yaml": "^3.11.2",
-        "@types/opn": "^5.1.0",
-        "@types/semver": "^5.5.0",
         "async-lock": "^1.1.3",
         "aws-sdk": "^2.317.0",
         "cloudformation-schema-js-yaml": "^1.0.1",
+        "del": "^3.0.0",
         "fs-extra": "^6.0.1",
         "handlebars": "^4.0.12",
         "js-yaml": "^3.12.0",
+        "jsonc-parser": "^2.0.2",
         "lodash": "^4.17.10",
         "npm": "^6.4.1",
         "opn": "^5.4.0",
         "request": "^2.88.0",
         "semver": "^5.6.0",
+        "sleep-promise": "^8.0.1",
+        "tcp-port-used": "^1.0.1",
         "typescript": "^3.1.3",
         "vscode-nls": "^3.2.4",
         "vue": "^2.5.16",

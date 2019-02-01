@@ -19,10 +19,8 @@ import { RefreshableAwsTreeProvider } from '../shared/treeview/awsTreeProvider'
 import { intersection, toMap, updateInPlace } from '../shared/utilities/collectionUtils'
 import { deleteCloudFormation } from './commands/deleteCloudFormation'
 import { deleteLambda } from './commands/deleteLambda'
-import { deployLambda } from './commands/deployLambda'
 import { getLambdaConfig } from './commands/getLambdaConfig'
 import { invokeLambda } from './commands/invokeLambda'
-import { newLambda } from './commands/newLambda'
 import { showErrorDetails } from './commands/showErrorDetails'
 import { CloudFormationStackNode } from './explorer/cloudFormationNodes'
 import { DefaultRegionNode } from './explorer/defaultRegionNode'
@@ -31,6 +29,7 @@ import { FunctionNodeBase } from './explorer/functionNode'
 import { RegionNode } from './explorer/regionNode'
 import { StandaloneFunctionNode } from './explorer/standaloneNodes'
 import { DefaultLambdaPolicyProvider, LambdaPolicyView } from './lambdaPolicy'
+import { configureLocalLambda } from './local/configureLocalLambda'
 import * as utils from './utils'
 
 export class LambdaTreeDataProvider implements vscode.TreeDataProvider<AWSTreeNodeBase>, RefreshableAwsTreeProvider {
@@ -52,11 +51,6 @@ export class LambdaTreeDataProvider implements vscode.TreeDataProvider<AWSTreeNo
 
     public initialize(): void {
         vscode.commands.registerCommand('aws.refreshAwsExplorer', async () => this.refresh())
-        vscode.commands.registerCommand('aws.newLambda', async () => await newLambda())
-        vscode.commands.registerCommand(
-            'aws.deployLambda',
-            async (node: FunctionNodeBase) => await deployLambda(node)
-        )
         vscode.commands.registerCommand(
             'aws.deleteLambda',
             async (node: StandaloneFunctionNode) => await deleteLambda(
@@ -81,6 +75,7 @@ export class LambdaTreeDataProvider implements vscode.TreeDataProvider<AWSTreeNo
             'aws.invokeLambda',
             async (node: FunctionNodeBase) => await invokeLambda(this.awsContext, this.resourceFetcher, node)
         )
+        vscode.commands.registerCommand('aws.configureLambda', configureLocalLambda)
         vscode.commands.registerCommand(
             'aws.getLambdaConfig',
             async (node: FunctionNodeBase) => await getLambdaConfig(
