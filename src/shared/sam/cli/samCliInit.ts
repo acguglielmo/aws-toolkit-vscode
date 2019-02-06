@@ -5,27 +5,36 @@
 
 'use strict'
 
-import { fileExists } from '../../filesystemUtilities'
+import * as vscode from 'vscode'
+import { SamLambdaRuntime } from '../../../lambda/models/samLambdaRuntime'
 import { ChildProcessResult } from '../../utilities/childProcess'
 import { DefaultSamCliProcessInvoker, SamCliProcessInvoker } from './samCliInvoker'
 
-export class SamCliBuildInvocation {
+export interface SamCliInitArgs {
+    runtime: SamLambdaRuntime
+    location: vscode.Uri
+    name: string
+}
+
+export class SamCliInitInvocation {
+    private readonly name: string
+    private readonly runtime: string
+    private readonly location: vscode.Uri
     public constructor(
-        private readonly buildDir: string,
-        private readonly baseDir: string,
-        private readonly templatePath: string,
+        { name, runtime, location }: SamCliInitArgs,
         private readonly invoker: SamCliProcessInvoker = new DefaultSamCliProcessInvoker()
     ) {
+        this.name = name
+        this.runtime = runtime
+        this.location = location
     }
 
     public async execute(): Promise<void> {
-        await this.validate()
-
         const { exitCode, error, stderr, stdout }: ChildProcessResult = await this.invoker.invoke(
-            'build',
-            '--build-dir', this.buildDir,
-            '--base-dir', this.baseDir,
-            '--template', this.templatePath
+            { cwd: this.location.fsPath },
+            'init',
+            '--name', this.name,
+            '--runtime', this.runtime
         )
 
         if (exitCode === 0) {
@@ -35,15 +44,9 @@ export class SamCliBuildInvocation {
         console.error('SAM CLI error')
         console.error(`Exit code: ${exitCode}`)
         console.error(`Error: ${error}`)
-        console.error(`stdout: ${stderr}`)
+        console.error(`stderr: ${stderr}`)
         console.error(`stdout: ${stdout}`)
 
-        throw new Error(`sam build encountered an error: ${error && error.message ? error.message : stderr || stdout}`)
-    }
-
-    private async validate(): Promise<void> {
-        if (!await fileExists(this.templatePath)) {
-            throw new Error(`template path does not exist: ${this.templatePath}`)
-        }
+        throw new Error(`sam init encountered an error: ${error && error.message || stderr || stdout}`)
     }
 }
