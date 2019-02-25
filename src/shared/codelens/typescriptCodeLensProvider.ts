@@ -16,7 +16,7 @@ import { buildHandlerConfig, getLocalLambdaConfiguration, HandlerConfig } from '
 import { detectLocalLambdas } from '../../lambda/local/detectLocalLambdas'
 import { NodeDebugConfiguration } from '../../lambda/local/nodeDebugConfiguration'
 import { CloudFormation } from '../cloudformation/cloudformation'
-import * as fileSystem from '../filesystem'
+import { mkdir, writeFile } from '../filesystem'
 import * as filesystemUtilities from '../filesystemUtilities'
 import { LambdaHandlerCandidate } from '../lambdaHandlerSearch'
 import { SamCliBuildInvocation } from '../sam/cli/samCliBuild'
@@ -125,8 +125,8 @@ export class TypescriptCodeLensProvider implements vscode.CodeLensProvider {
         workspaceFolder: vscode.WorkspaceFolder,
     ): vscode.CodeLens {
         const title: string = debug ?
-            localize('AWS.codelens.lambda.invoke.debug', 'Debug') :
-            localize('AWS.codelens.lambda.invoke', 'Run')
+            localize('AWS.codelens.lambda.invoke.debug', 'Debug Locally') :
+            localize('AWS.codelens.lambda.invoke', 'Run Locally')
 
         const commandArgs: LambdaLocalInvokeArguments = {
             document,
@@ -260,13 +260,12 @@ class LocalLambdaRunner {
 
     private async getBaseBuildFolder(): Promise<string> {
         if (!this._baseBuildFolder) {
-            this._baseBuildFolder = await fileSystem.mkdtempAsync(
-                path.join(
-                    ExtensionDisposableFiles.getInstance().toolkitTempFolder,
-                    'build-'
-                )
+            const baseBuildDir = path.join(
+                ExtensionDisposableFiles.getInstance().toolkitTempFolder,
+                'build'
             )
-
+            await mkdir(baseBuildDir)
+            this._baseBuildFolder = baseBuildDir
             ExtensionDisposableFiles.getInstance().addFolder(this._baseBuildFolder)
         }
 
@@ -282,7 +281,6 @@ class LocalLambdaRunner {
     ): Promise<string> {
         const buildFolder: string = await this.getBaseBuildFolder()
         const inputTemplatePath: string = path.join(buildFolder, 'input', 'input-template.yaml')
-        let existingTemplateResource: CloudFormation.Resource | undefined
 
         // Make function handler relative to baseDir
         const handlerFileRelativePath = path.relative(
@@ -296,10 +294,11 @@ class LocalLambdaRunner {
         ).replace('\\', '/')
 
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(this.localInvokeArgs.workspaceFolder.uri)
+        let existingTemplateResource: CloudFormation.Resource | undefined
         if (workspaceFolder) {
             const lambdas = await detectLocalLambdas([workspaceFolder])
             const existingLambda = lambdas.find(lambda => lambda.handler === relativeFunctionHandler)
-            existingTemplateResource = (existingLambda ? existingLambda.resource : undefined)
+            existingTemplateResource = existingLambda ? existingLambda.resource : undefined
         }
 
         let newTemplate = new SamTemplateGenerator()
@@ -386,9 +385,11 @@ class LocalLambdaRunner {
         const environmentVariablePath = path.join(await this.getBaseBuildFolder(), 'env-vars.json')
         const config = await this.getConfig()
 
-        await fileSystem.writeFileAsync(eventPath, JSON.stringify(config.event || {}))
-        await fileSystem.writeFileAsync(environmentVariablePath,
-                                        JSON.stringify(this.getEnvironmentVariables(config)))
+        await writeFile(eventPath, JSON.stringify(config.event || {}))
+        await writeFile(
+            environmentVariablePath,
+            JSON.stringify(this.getEnvironmentVariables(config))
+        )
 
         const command = new SamCliLocalInvokeInvocation(
             LocalLambdaRunner.TEMPLATE_RESOURCE_NAME,

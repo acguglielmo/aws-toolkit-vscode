@@ -63,14 +63,44 @@ class DefaultCreateNewSamAppWizardContext implements CreateNewSamAppWizardContex
 }
 
 export class CreateNewSamAppWizard extends MultiStepWizard<SamCliInitArgs> {
-    private readonly RUNTIME: WizardStep = new WizardStep(async () => {
+    private runtime?: lambdaRuntime.SamLambdaRuntime
+    private location?: vscode.Uri
+    private name?: string
+
+    public constructor(
+        private readonly context: CreateNewSamAppWizardContext = new DefaultCreateNewSamAppWizardContext()
+    ) {
+        super()
+    }
+
+    protected get startStep() {
+        return this.RUNTIME
+    }
+
+    protected getResult(): SamCliInitArgs | undefined {
+        if (!this.runtime || !this.location || !this.name) {
+            return undefined
+        }
+
+        return {
+            runtime: this.runtime,
+            location: this.location,
+            name: this.name
+        }
+    }
+
+    private readonly RUNTIME: WizardStep = async () => {
         const runtimeItems = this.context.lambdaRuntimes
             .toArray()
             .sort()
             .map(runtime => ({ label: runtime }))
 
         const result = await this.context.showQuickPick<vscode.QuickPickItem>(runtimeItems, {
-            ignoreFocusOut: true
+            ignoreFocusOut: true,
+            placeHolder: localize(
+                'AWS.samcli.initWizard.runtime.prompt',
+                'Select a SAM Application Runtime'
+            )
         })
 
         if (!result) {
@@ -80,15 +110,19 @@ export class CreateNewSamAppWizard extends MultiStepWizard<SamCliInitArgs> {
         this.runtime = result.label as lambdaRuntime.SamLambdaRuntime
 
         return this.LOCATION
-    })
+    }
 
-    private readonly LOCATION: WizardStep = new WizardStep(async () => {
+    private readonly LOCATION: WizardStep = async () => {
         const choices: FolderQuickPickItem[] = (this.context.workspaceFolders || [])
-            .map<FolderQuickPickItem>(f => new WorkspaceFolderQuickPickItem(f) )
-            .concat([ new BrowseFolderQuickPickItem(this.context) ])
+            .map<FolderQuickPickItem>(f => new WorkspaceFolderQuickPickItem(f))
+            .concat([new BrowseFolderQuickPickItem(this.context)])
 
         const selection = await this.context.showQuickPick(choices, {
             ignoreFocusOut: true,
+            placeHolder: localize(
+                'AWS.samcli.initWizard.location.prompt',
+                'Select a location for your new project'
+            )
         })
         if (!selection) {
             return this.RUNTIME
@@ -96,9 +130,9 @@ export class CreateNewSamAppWizard extends MultiStepWizard<SamCliInitArgs> {
         this.location = await selection.getUri()
 
         return this.location ? this.NAME : this.RUNTIME
-    })
+    }
 
-    private readonly NAME: WizardStep = new WizardStep(async () => {
+    private readonly NAME: WizardStep = async () => {
         this.name = await this.context.showInputBox({
             value: 'my-sam-app',
             prompt: localize(
@@ -132,32 +166,6 @@ export class CreateNewSamAppWizard extends MultiStepWizard<SamCliInitArgs> {
         })
 
         return this.name ? undefined : this.LOCATION
-    })
-
-    private runtime?: lambdaRuntime.SamLambdaRuntime
-    private location?: vscode.Uri
-    private name?: string
-
-    public constructor(
-        private readonly context: CreateNewSamAppWizardContext = new DefaultCreateNewSamAppWizardContext()
-    ) {
-        super()
-    }
-
-    protected get startStep() {
-        return this.RUNTIME
-    }
-
-    protected getResult(): SamCliInitArgs | undefined {
-        if (!this.runtime || !this.location || !this.name) {
-            return undefined
-        }
-
-        return {
-            runtime: this.runtime,
-            location: this.location,
-            name: this.name
-        }
     }
 }
 

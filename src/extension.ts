@@ -8,10 +8,8 @@
 import * as vscode from 'vscode'
 import * as nls from 'vscode-nls'
 
-import { createNewSamApp } from './lambda/commands/createNewSamApp'
 import { RegionNode } from './lambda/explorer/regionNode'
 import { LambdaTreeDataProvider } from './lambda/lambdaTreeDataProvider'
-import { NodeDebugConfigurationProvider } from './lambda/local/debugConfigurationProvider'
 import { SampleEventsTreeDataProvider } from './lambda/sampleEventsTreeDataProvider'
 import { DefaultAWSClientBuilder } from './shared/awsClientBuilder'
 import { AwsContextTreeCollection } from './shared/awsContextTreeCollection'
@@ -44,7 +42,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const localize = nls.loadMessageBundle()
 
-    ext.lambdaOutputChannel = vscode.window.createOutputChannel('AWS Lambda')
     ext.context = context
 
     const toolkitOutputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -80,13 +77,15 @@ export async function activate(context: vscode.ExtensionContext) {
         'aws.hideRegion',
         async (node?: RegionNode) => await ext.awsContextCommands.onCommandHideRegion(safeGet(node, x => x.regionCode))
     )
-    vscode.commands.registerCommand(
-        'aws.lambda.createNewSamApp',
-        async () => await createNewSamApp()
-    )
 
     const providers = [
-        new LambdaTreeDataProvider(awsContext, awsContextTrees, regionProvider, resourceFetcher),
+        new LambdaTreeDataProvider(
+            awsContext,
+            awsContextTrees,
+            regionProvider,
+            resourceFetcher,
+            (relativeExtensionPath) => getExtensionAbsolutePath(context, relativeExtensionPath)
+        ),
         new SampleEventsTreeDataProvider(awsContextTrees)
     ]
 
@@ -149,4 +148,8 @@ async function initializeSamCli(): Promise<void> {
     )
 
     await SamCliDetection.detectSamCli(false)
+}
+
+function getExtensionAbsolutePath(context: vscode.ExtensionContext, relativeExtensionPath: string): string {
+    return context.asAbsolutePath(relativeExtensionPath)
 }
